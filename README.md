@@ -14,9 +14,9 @@
 
     yarn add node-sass react-router-dom axios bootstrap
 
-  Настраиваем линтер:
+  Настраиваем линтер (сам eslint уже установлен вместе с create-react-app):
 
-    yarn add eslint eslint-plugin-babel eslint-plugin-react --dev
+    yarn add eslint-plugin-babel eslint-plugin-react --dev
 
   Создаем обслуживающие функционал:
 
@@ -114,11 +114,21 @@
     .gitattributes export-ignore
     .gitignore export-ignore
 
+  Для того, чтобы использовать препроцессор просто переименовываем index.css в index.scss. Так же переименовывам импорт в .App/ И для того, чтобы подключить туда же bootstrap, помещаем вверх этого файла:
+
+    @import "~bootstrap/scss/bootstrap";
+
+  Удаляем из предустановленного проекта App.js App.test.js logo.svg reportWebVitalis.js. Удаляем сопутствующие импорты.
+
   Настраиваем порт в package.json:
 
     "start": "set port=3013 && react-scripts start",
 
-  Создаем репозиторий на gitHub и копируем его на компьютер, введя после нижеприведенной команды адрес, который скопировали из удаленного репозитория:
+  Запускаем проект:
+
+    yarn run start
+
+  Если проект успешно скомпилировался, создаем репозиторий на gitHub и копируем его на компьютер, введя после нижеприведенной команды адрес, который скопировали из удаленного репозитория:
 
     git remote add origin
 
