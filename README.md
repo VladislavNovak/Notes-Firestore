@@ -1,70 +1,135 @@
-# Getting Started with Create React App
+Проект реализует функционал записной книжки. Основывается на React, Axios, Firebase. Содержит Sass. 
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# Базовые настройки
 
-## Available Scripts
+  Если ещё не установлен yarn:
 
-In the project directory, you can run:
+    npm i -g yarn
 
-### `yarn start`
+  Создаем проект:
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+    npx create-react-app notes-firestore
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+  Переходим в сам проект через cd notes-firestore и устанавливаем зависимости:
 
-### `yarn test`
+    yarn add node-sass react-router-dom axios bootstrap
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+  Настраиваем линтер:
 
-### `yarn build`
+    yarn add eslint eslint-plugin-babel eslint-plugin-react --dev
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+  Создаем обслуживающие функционал:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+    touch .editorconfig .eslintrc.json .gitattributes
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+  Наполняем editorconfig:
 
-### `yarn eject`
+    root = true
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+    [*]
+    charset = utf-8
+    end_of_line = lf
+    indent_size = 2
+    indent_style = space
+    insert_final_newline = true
+    trim_trailing_whitespace = true
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+    [*.md]
+    trim_trailing_whitespace = false
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+  Наполняем eslintrc:
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+    {
+      "env": {
+        "browser": true,
+        "commonjs": true,
+        "es6": true,
+        "node": true
+      },
+      "extends": ["eslint:recommended",
+        "plugin:react/recommended"],
+        "parserOptions": {
+          "ecmaFeatures": {
+            "jsx": true
+      },
+          "ecmaVersion": 2018,
+          "sourceType": "module"
+      },
+      "plugins": [
+          "react",
+          "babel"
+      ],
+      "rules": {
+          "no-unused-vars": ["error", { "caughtErrorsIgnorePattern": "^ignore" }],
+          "react/jsx-uses-react": 1,
+          "react/jsx-uses-vars": "error",
 
-## Learn More
+          "linebreak-style": [
+          "error",
+          "unix"
+      ],
+          "babel/new-cap": 1,
+          "babel/camelcase": 1,
+          "babel/no-invalid-this": 1,
+          "babel/object-curly-spacing": 1,
+            "babel/semi": 1,
+          "babel/no-unused-expressions": 1,
+          "babel/valid-typeof": 1
+      }
+    }
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+  Наполняем gitattributes:
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+    * text=auto
+    *.doc     diff=astextplain
+    *.DOC     diff=astextplain
+    *.docx    diff=astextplain
+    *.DOCX    diff=astextplain
+    *.dot     diff=astextplain
+    *.DOT     diff=astextplain
+    *.pdf     diff=astextplain
+    *.PDF     diff=astextplain
+    *.rtf     diff=astextplain
+    *.RTF     diff=astextplain
+    *.md text
+    *.tex text
+    *.adoc text
+    *.textile text
+    *.mustache text
+    *.csv text
+    *.tab text
+    *.tsv text
+    *.sql text
+    *.png binary
+    *.jpg binary
+    *.jpeg binary
+    *.gif binary
+    *.tif binary
+    *.tiff binary
+    *.ico binary
+    *.svg binary
+    #*.svg text
+    *.eps binary
 
-### Code Splitting
+    .gitattributes export-ignore
+    .gitignore export-ignore
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+  Настраиваем порт в package.json:
 
-### Analyzing the Bundle Size
+    "start": "set port=3013 && react-scripts start",
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+  Создаем репозиторий на gitHub и копируем его на компьютер, введя после нижеприведенной команды адрес, который скопировали из удаленного репозитория:
 
-### Making a Progressive Web App
+    git remote add origin
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+  Сохраняем все изменения в удаленный репозиторий на github, привязываясь к нему:
 
-### Advanced Configuration
+    git add -A
+    git commit -m
+    git push -u origin master
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+  Все последующие изменения можно будет вносить командой:
 
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+    git add -A
+    git commit -m
+    git push
