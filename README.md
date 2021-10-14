@@ -114,7 +114,7 @@
     .gitattributes export-ignore
     .gitignore export-ignore
 
-  Для того, чтобы использовать препроцессор просто переименовываем index.css в index.scss. Так же переименовывам импорт в .App/ И для того, чтобы подключить туда же bootstrap, помещаем вверх этого файла:
+  Для того, чтобы использовать препроцессор, меняем расширение index.css и перемещаем в папку src/assets/sass/index.scss. А для того, чтобы подключить туда же bootstrap, помещаем вверх этого файла:
 
     @import "~bootstrap/scss/bootstrap";
 
@@ -143,3 +143,101 @@
     git add -A
     git commit -m
     git push
+
+------------------------------------------------------------------------------
+
+# Маршрутизация
+
+  Создаем компоненты, которые представляют страницы (src/pages/note/: Note, About) и перечисляем в константах пути к ним:
+
+  src/routes/constants.js
+
+    export const NOTE_ROUTE = `/note`;
+    export const ABOUT_ROUTE = `/about`;
+
+  Описываем пути в виде массива объектов:
+
+  src/routes/routes.js
+
+    import {ABOUT_ROUTE, NOTE_ROUTE} from './constants';
+    import Note from '../pages/note/Note';
+    import About from '../pages/about/About';
+
+    export const publicRoutes = [
+      {
+        title: `note`,
+        path: NOTE_ROUTE,
+        Component: Note,
+      },
+      {
+        title: `about`,
+        path: ABOUT_ROUTE,
+        Component: About,
+      },
+    ];
+
+  Создаем навигацию. Она позволит перемещаться между страницами при клике по указанному пути. Используем NavLink. В отличии от простого Link, он позволяет воспользоваться стилизацией для выделения активной ссылки. NavLink включает в себя:
+1.  activeClassName, значение которого просто добавляется к стилизации
+2. activeStyle, который используется в качестве встроенной стилизации (activeStyle={{color: "green", fontWeight: "bold"}})
+
+src/components/Navbar.jsx
+
+    import React, {Fragment} from 'react';
+    import {NavLink} from 'react-router-dom';
+    import {publicRoutes} from '../routes/routes';
+
+    const Navbar = () => {
+      return (
+        <Fragment>
+          <nav className="navbar navbar-dark navbar-expand-lg bg-primary">
+            <div className="navbar-brand">
+              Note App
+            </div>
+
+            <ul className="navbar-nav">
+              {publicRoutes.map(({title, path}) => (
+                <li key={title} className="nav-item">
+                  <NavLink
+                    to={path}
+                    className="nav-link">
+                    {title}
+                  </NavLink>
+                </li>
+              ))}
+            </ul>
+          </nav>
+        </Fragment>
+      );
+    };
+
+    export default Navbar;
+
+
+  Подключаем маршрутизацию. Switch итерируется по всем путям и в том случае, если ничего не найдено, возвращает последний маршрут. В нашем случае - Redirect. Это необходимо для того, чтобы пользователь, при неверном наборе пути, возвращался на NOTE_ROUTE:
+
+  src/App.js
+
+    import React from 'react';
+    import {BrowserRouter, Switch, Route, Redirect} from "react-router-dom";
+    import Navbar from './components/Navbar';
+    import {NOTE_ROUTE} from './routes/constants';
+    import {publicRoutes} from './routes/routes';
+
+    function App() {
+      return (
+        <BrowserRouter>
+          <Navbar />
+          <div className="container pt-4">
+            <Switch>
+              {publicRoutes.map(({title, path, Component}) => <Route key={title} path={path} component={Component} exact />)}
+              <Redirect to={NOTE_ROUTE} />
+            </Switch>
+          </div>
+        </BrowserRouter>
+      );
+    }
+
+    export default App;
+
+
+
