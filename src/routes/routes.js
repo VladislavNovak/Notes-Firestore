@@ -1,15 +1,15 @@
-import {ABOUT_ROUTE, NOTE_ROUTE} from './constants';
-import Note from '../pages/note/Note';
+import {ABOUT_ROUTE, HOME_ROUTE} from './constants';
+import Home from '../pages/home/Home';
 import About from '../pages/about/About';
 
 export const publicRoutes = [
   {
-    title: `note`,
-    path: NOTE_ROUTE,
-    Component: Note,
+    title: `Home`,
+    path: HOME_ROUTE,
+    Component: Home,
   },
   {
-    title: `about`,
+    title: `About`,
     path: ABOUT_ROUTE,
     Component: About,
   },

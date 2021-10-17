@@ -1,10 +1,13 @@
-import React, {Fragment} from 'react';
+import React from 'react';
 
 const About = () => {
   return (
-    <Fragment>
-      <h1>About</h1>
-    </Fragment>
+    <div className="jumbotron">
+      <div className="container">
+        <h1 className="display-4">Лучшее React приложение</h1>
+        <p className="lead">Версия 0.1</p>
+      </div>
+    </div>
   );
 };
 
