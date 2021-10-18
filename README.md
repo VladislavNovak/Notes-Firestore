@@ -87,20 +87,26 @@ src/App.js
 
 1. **Создаем экшены**:
 
-*src/context/alertActions.jsx*
+*src/context/alertActions.js*
 
     export const SHOW_ALERT = `SHOW_ALERT`;
     export const HIDE_ALERT = `HIDE_ALERT`;
 
-2. **Создаем редьюсер, который позволит взаимодействовать с стейтом Alert, отправляя action**:
+2. **Создаем редьюсер**:
+
+Позволит взаимодействовать с стейтом Alert, отправляя action**:
 
 *src/context/alert/alertReducer.js*
 
     import {HIDE_ALERT, SHOW_ALERT} from "../alertActions";
 
     const handlers = {
-      [SHOW_ALERT]: (state, {payload}) => ({...payload, visible: true}),
-      [HIDE_ALERT]: (state) => ({...state, visible: false}),
+      [SHOW_ALERT]: (state, {payload}) => ({
+        ...payload, visible: true
+      }),
+      [HIDE_ALERT]: (state) => ({
+        ...state, visible: false
+      }),
       DEFAULT: state => state,
     };
 
@@ -117,9 +123,9 @@ src/App.js
 
     export const AlertContext = createContext();
 
-4. **Создаем компонент, который будет оборачивать все приложение в контекст провайдера**.
+4. **Соединяем стейт и редьюсер**:
 
-В useReducer передаем только что созданный редьюсер, создаем необходимые функции взаимодействия, передаем их одним объектом в пропсы.
+Создаем компонент, который содержит стейт и будет оборачивать все приложение в контекст провайдера. Для этого в useReducer передаем только что созданный редьюсер, создаем необходимые функции взаимодействия, передаем их одним объектом в пропсы.
 
 *src/context/alert/AlertState.js*
 
@@ -180,7 +186,7 @@ src/App.js
 
     export default App;
 
-5. **Использование контекста в компонентах**. 
+6. **Использование контекста в компонентах**. 
 
 Все, что нужно теперь для извлечения стейта, это использовать const {alert, hide, show} = useContext(AlertContext):
 
@@ -234,6 +240,245 @@ src/App.js
     };
 
     export default Form;
+
+# Firebase
+
+Часть процесса повторяет создававшийся выше useContext. 
+
+1. **Создаем экшены**:
+
+src/context/firebaseActions.js
+
+    export const SHOW_LOADER = 'SHOW_LOADER';
+    export const ADD_NOTE = 'ADD_NOTE';
+    export const FETCH_NOTES = 'FETCH_NOTES';
+    export const REMOVE_NOTE = 'REMOVE_NOTE';
+
+2. **Создаем редьюсер**:
+
+Позволит взаимодействовать с стейтом Firebase, отправляя action**:
+
+*src/context/firebase/firebaseReducer.js*
+
+    import {ADD_NOTE, FETCH_NOTES, REMOVE_NOTE, SHOW_LOADER} from "../firebaseActions";
+
+    const handlers = {
+      [SHOW_LOADER]: (state) => ({
+        ...state, loading: true
+      }),
+      [ADD_NOTE]: (state, {payload}) => ({
+        ...state, notes: [...state, payload]
+      }),
+      [FETCH_NOTES]: (state, {payload}) => ({
+        ...state, notes: payload
+      }),
+      [REMOVE_NOTE]: (state, {payload}) => ({
+        ...state, notes: state.notes.filter(note => note.id !== payload)
+      }),
+      DEFAULT: state => state,
+    };
+
+    export const firebaseReducer = (state, action) => {
+      const handle = handlers[action.type] || handlers.DEFAULT;
+      return handle(state, action);
+    };
+
+3. **Извлекаем контекст**:
+
+Это обычная переменная, которую используем как реакт-компонент
+
+*src/context/firebase/firebaseContext.js*
+
+    import {createContext} from 'react'
+
+    export const FirebaseContext = createContext();
+
+4. Создаем проект на сайте firebase
+
+На официальном сайте создаем проект, производим первоначальные настройки (даем наименование), далее переходим в раздел Realtime Database, указываем, что операции будем проводить в тестовом режиме, в закладке "Данные" копируем ссылку на проект. 
+
+5. **Соединяем стейт, редьюсер и Axios запросы**:
+
+Это будет ***компонент***, который содержит стейт и будет оборачивать все приложение в контекст провайдера. Для этого в useReducer передаем только что созданный редьюсер, создаем необходимые функции взаимодействия, сохраненную ссылку на проект firebase сохраняем в файл .env.local REACT_APP_DB_URL (более подробно [здесь](#Паттерны-и-лайфхаки))
+
+*src/context/firebase/FirebaseState.js*
+
+    import React, {useReducer} from 'react';
+    import axios from 'axios';
+    import {REMOVE_NOTE, SHOW_LOADER} from '../firebaseActions';
+    import {FirebaseContext} from './firebaseContext';
+    import {firebaseReducer} from './firebaseReducer';
+
+    const url=process.env.REACT_APP_DB_URL;
+
+    const initialState = {
+      notes: [],
+      loading: false,
+    };
+
+    export const FirebaseState = ({children}) => {
+      const [state, dispatch] = useReducer(firebaseReducer, initialState);
+
+      const showLoader = () => dispatch({type: SHOW_LOADER});
+
+      const fetchNotes = async () => {
+        showLoader();
+        const res = await axios.get(`url/notes.json`);
+
+        console.log(`fetch: `, res.data);
+      };
+
+      const addNote = async (title) => {
+        const note = {
+          title, 
+          date: new Date().toJSON,
+        };
+
+        try {
+          const res = await axios.post(`${url}/notes.json`, note);
+          console.log(`addNote: `, res.data);
+        } catch (error) {
+          throw new Error(error.message);
+        }
+      };
+
+      const removeNote = async (id) => {
+        await axios.delete(`url/notes/i}.json`);
+
+        dispatch({
+          type: REMOVE_NOTE,
+          payload: id,
+        });
+      };
+
+      return (
+        <FirebaseContext.Provider value={{
+          showLoader,
+          fetchNotes,
+          addNote,
+          removeNote,
+          loading: state.loading,
+          notes: state.notes,
+        }}>
+          {children}
+        </FirebaseContext.Provider>
+      );
+    };
+
+6. **Оборачиваем все компоненты в FirebaseState**. 
+
+Тем самым абсолютно любые компоненты имеют доступ к стейту Firebase при использовании его контекста {showLoader, fetchNotes, addNote, removeNote, loading: state.loading, notes: state.notes}
+
+*src/App.js*
+
+    import React from 'react';
+    import {BrowserRouter, Switch, Route, Redirect} from "react-router-dom";
+    import {HOME_ROUTE} from './routes/constants';
+    import {publicRoutes} from './routes/routes';
+    import {AlertState} from './context/alert/AlertState';
+    import {FirebaseState} from './context/firebase/FirebaseState';
+    import Navbar from './components/Navbar';
+    import Alert from './components/Alert';
+
+    function App() {
+      return (
+        <FirebaseState>
+          <AlertState>
+            <BrowserRouter>
+              <Navbar />
+              <div className="container pt-4">
+                <Alert />
+                <Switch>
+                  {publicRoutes.map(({title, path, Component}) => <Route key={title} path={path} component={Component} exact />)}
+                  <Redirect to={HOME_ROUTE} />
+                </Switch>
+              </div>
+            </BrowserRouter>
+          </AlertState>
+        </FirebaseState>
+      );
+    }
+
+    export default App;
+
+7. **Использование контекста в компонентах**:
+
+Все, что нужно теперь для извлечения стейта, это использовать const {showLoader, fetchNotes, addNote, removeNote, loading, notes} = useContext(FirebaseContext) в нужных файлах.
+
+Для отрисовки данных с сервера:
+
+src/pages/home/Home.jsx
+
+    import React, {Fragment, useContext, useEffect} from 'react';
+    import {FirebaseContext} from '../../context/firebase/firebaseContext';
+    import Form from '../../components/Form';
+    import Loader from '../../components/Loader';
+    import Notes from '../../components/Notes';
+
+    const Home = () => {
+      const {loading, notes, fetchNotes} = useContext(FirebaseContext);
+
+      useEffect(() => {
+        fetchNotes();
+      }, []);
+
+      return (
+        <Fragment>
+          {loading ? <Loader /> : <Notes notes={notes} />}
+        </Fragment>
+      );
+    };
+
+    export default Home;
+
+Для добавления данных на сервер извлекаем из контекста сам firebase и используем ранее созданный для него метод addNote()
+
+src/components/form/Form.jsx
+
+    import React, {useContext, useState} from 'react';
+    import {AlertContext} from '../context/alert/alertContext';
+    import {FirebaseContext} from '../context/firebase/firebaseContext';
+
+    const Form = () => {
+
+      const [value, setValue] = useState('');
+      const alert = useContext(AlertContext);
+      const firebase = useContext(FirebaseContext);
+
+      const handleSubmit = (evt) => {
+        evt.preventDefault();
+
+        if (value) {
+
+          firebase.addNote(value).then(() => {
+            alert.show(`Заметка была создана`, `success`);
+          }).catch(error => {
+            alert.show(`Заметка не была создана`, error);
+          });
+
+          setValue(``);
+
+        } else {
+          alert.show(`Введите название заметки`);
+        }
+      };
+
+      return (
+        <form onSubmit={handleSubmit}>
+          <div className="form-group">
+            <input
+              type="text"
+              className="form-control"
+              placeholder="Введите название заметки"
+              value={value}
+              onChange={({target}) => setValue(target.value.trim())} />
+          </div>
+        </form>
+      );
+    };
+
+    export default Form;
+
 
 # Базовые настройки
 
@@ -385,6 +630,16 @@ src/App.js
     git push
 
 # Паттерны и лайфхаки
+
+Переменные окружения, такие, например, как путь до проекта на сервере firebase можно сохранить в файле .env.local. Сам файл должен быть указан в gitignore т.к. в нем можно содержать в том числе и пароли. Данный подход можно использовать только для этапа разработки:
+
+    REACT_APP_DB_URL=https://firebasedatabase.app
+
+После - необходимо перекомпилировать проект и теперь можно извлечь переменную, используя объект process:
+
+    const proc = process.env.REACT_APP_DB_URL;
+
+    console.log(proc);
 
 Сгенерировать массив с фейковыми данными:
 
