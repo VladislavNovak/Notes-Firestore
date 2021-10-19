@@ -5,7 +5,7 @@ import Loader from '../../components/Loader';
 import Notes from '../../components/Notes';
 
 const Home = () => {
-  const {loading, notes, fetchNotes} = useContext(FirebaseContext);
+  const {loading, notes, fetchNotes, removeNote} = useContext(FirebaseContext);
 
   useEffect(() => {
     fetchNotes();
@@ -19,7 +19,7 @@ const Home = () => {
 
       {loading
         ? <Loader />
-        : <Notes notes={notes} />}
+        : <Notes notes={notes} onRemove={removeNote} />}
 
     </Fragment>
   );

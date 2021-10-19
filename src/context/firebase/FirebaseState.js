@@ -1,12 +1,11 @@
 /* eslint-disable react/prop-types */
-/* eslint-disable no-unused-vars */
 import React, {useReducer} from 'react';
 import axios from 'axios';
-import {ADD_NOTE, REMOVE_NOTE, SHOW_LOADER} from '../firebaseActions';
+import {ADD_NOTE, FETCH_NOTES, REMOVE_NOTE, SHOW_LOADER} from '../firebaseActions';
 import {FirebaseContext} from './firebaseContext';
 import {firebaseReducer} from './firebaseReducer';
 
-const url=process.env.REACT_APP_DB_URL;
+const url = process.env.REACT_APP_DB_URL;
 
 const initialState = {
   notes: [],
@@ -14,21 +13,28 @@ const initialState = {
 };
 
 export const FirebaseState = ({children}) => {
+
   const [state, dispatch] = useReducer(firebaseReducer, initialState);
 
-  const showLoader = () => dispatch({type: SHOW_LOADER});
-
   const fetchNotes = async () => {
-    showLoader();
+    dispatch({type: SHOW_LOADER});
+
     const res = await axios.get(`${url}/notes.json`);
 
-    console.log(`fetch: `, res.data);
+    const payload = Object.keys(res.data).map(key => {
+      return {
+        ...res.data[key],
+        id: key,
+      };
+    });
+
+    dispatch({type: FETCH_NOTES, payload});
   };
 
   const addNote = async (title) => {
     const note = {
       title,
-      date: new Date().toJSON,
+      date: new Date().toJSON(),
     };
 
     try {
@@ -56,7 +62,6 @@ export const FirebaseState = ({children}) => {
 
   return (
     <FirebaseContext.Provider value={{
-      showLoader,
       fetchNotes,
       addNote,
       removeNote,
