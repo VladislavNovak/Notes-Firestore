@@ -94,7 +94,7 @@ src/App.js
 
 2. **Создаем редьюсер**:
 
-Позволит взаимодействовать с стейтом Alert, отправляя action**:
+Позволит взаимодействовать с стейтом Alert, отправляя actions:
 
 *src/context/alert/alertReducer.js*
 
@@ -256,7 +256,7 @@ src/context/firebaseActions.js
 
 2. **Создаем редьюсер**:
 
-Позволит взаимодействовать с стейтом Firebase, отправляя action**:
+Позволит взаимодействовать с стейтом Firebase, отправляя actions:
 
 *src/context/firebase/firebaseReducer.js*
 

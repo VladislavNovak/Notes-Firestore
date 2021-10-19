@@ -1,16 +1,24 @@
 /* eslint-disable react/prop-types */
 import React, {useReducer} from 'react';
-import {HIDE_ALERT, SHOW_ALERT} from '../alertActions';
+import {HIDE_ALERT, SHOW_ALERT} from './alertConstants';
 import {AlertContext} from './alertContext';
 import {alertReducer} from './alertReducer';
 
-export const AlertState = ({children}) => {
-  const [state, dispatch] = useReducer(alertReducer, {visible: false});
+const initialState = {
+  visible: false,
+  text: ``,
+  warning: ``,
+};
 
-  const show = (text, type = `warning`) => dispatch({
+export const AlertState = ({children}) => {
+  const [state, dispatch] = useReducer(alertReducer, initialState);
+
+  const show = (text, warning) => {
+    dispatch({
       type: SHOW_ALERT,
-      payload: {text, type},
+      payload: {text, warning},
     });
+  };
 
   const hide = () => dispatch({
     type: HIDE_ALERT,

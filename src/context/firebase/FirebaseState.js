@@ -21,7 +21,7 @@ export const FirebaseState = ({children}) => {
 
     const res = await axios.get(`${url}/notes.json`);
 
-    const payload = Object.keys(res.data).map(key => {
+    const payload = Object.keys(res.data || {}).map(key => {
       return {
         ...res.data[key],
         id: key,
@@ -39,6 +39,7 @@ export const FirebaseState = ({children}) => {
 
     try {
       const res = await axios.post(`${url}/notes.json`, note);
+
       const payload = {
         ...note,
         id: res.data.name

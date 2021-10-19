@@ -5,7 +5,7 @@ import {publicRoutes} from '../routes/routes';
 const Navbar = () => {
   return (
     <Fragment>
-      <nav className="navbar navbar-dark navbar-expand-lg bg-primary">
+      <nav className="navbar navbar-dark navbar-expand-lg bg-primary navbar-reboot">
         <div className="navbar-brand">
           Note App
         </div>

@@ -1,8 +1,15 @@
-import {HIDE_ALERT, SHOW_ALERT} from "../alertActions";
+import {HIDE_ALERT, SHOW_ALERT} from "./alertConstants";
 
 const handlers = {
-  [SHOW_ALERT]: (state, {payload}) => ({...payload, visible: true}),
-  [HIDE_ALERT]: (state) => ({...state, visible: false}),
+  [SHOW_ALERT]: (state, {payload}) => ({
+    ...state,
+    ...payload,
+    visible: true,
+  }),
+  [HIDE_ALERT]: (state) => ({
+    ...state,
+    visible: false
+  }),
   DEFAULT: state => state,
 };
 

@@ -12,17 +12,12 @@ const Form = () => {
     evt.preventDefault();
 
     if (value.trim()) {
-
-      firebase.addNote(value.trim()).then(() => {
-        alert.show(`Заметка была создана`, `success`);
-      }).catch(error => {
-        alert.show(`Заметка не была создана`, error);
-      });
-
-      setValue(``);
-
+      firebase.addNote(value.trim())
+        .then(() => alert.show(`The note has been created`, `success`))
+        .then(() => setValue(``))
+        .catch((error) => alert.show(`Error: ${error}`, `danger`));
     } else {
-      alert.show(`Введите название заметки`);
+      alert.show(`Enter a title for the note`, `warning`);
     }
   };
 
@@ -32,7 +27,7 @@ const Form = () => {
         <input
           type="text"
           className="form-control"
-          placeholder="Введите название заметки"
+          placeholder="Enter a title for the note"
           value={value}
           onChange={({target}) => setValue(target.value)} />
       </div>
