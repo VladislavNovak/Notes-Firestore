@@ -6,7 +6,7 @@ const Notes = ({notes, onRemove}) => (
     {notes.map(note => (
       <li
         key={note.id}
-        className="list-group-item note">
+        className="list-group-item note-reboot slide-in-elliptic-left-fwd">
           <div>
             <strong>{note.title}</strong>
             <small>{note.date}</small>
