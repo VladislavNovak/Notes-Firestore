@@ -2,9 +2,6 @@
 Реализует функционал записной книжки. 
 Использует React, Axios, Firebase. Содержит Sass. 
 
-
-------------------------------------------------------------------------------
-
 # Маршрутизация
 
 1. **Создаем компоненты, которые представляют страницы (Note, About)**
@@ -83,29 +80,34 @@ src/App.js
 
 # useContext
 
-Данный подход позволит взаимодействовать между различными компонентов вне обычной каскадной схемы.
+Нам нужно, чтобы при каких-либо изменениях в Notes эти действия также отражались на Alert. Т.е. менялся текст, менялась видимость. Поэтому создадим хранилище, изменения стейта которого будут влиять на компонент Alert. Он будет содержать такие данные, как {visible, text, warning}. Посредством useContext сделаем его доступным для воздействия из любых компонентов.
 
 1. **Создаем экшены**:
 
-*src/context/alertActions.js*
+Перечисляем действия, которые будут воздействовать на стейт.
+
+*src/context/alert/alertConstants.js*
 
     export const SHOW_ALERT = `SHOW_ALERT`;
     export const HIDE_ALERT = `HIDE_ALERT`;
 
 2. **Создаем редьюсер**:
 
-Позволит взаимодействовать с стейтом Alert, отправляя actions:
+Отправляя действия в редьюсер, мы можем воздействовать на стейт определенным образом. Существует несколько паттернов создания редьюсера. В данном случае воспользуемся литералами объекта:
 
 *src/context/alert/alertReducer.js*
 
-    import {HIDE_ALERT, SHOW_ALERT} from "../alertActions";
+    import {HIDE_ALERT, SHOW_ALERT} from "./alertConstants";
 
     const handlers = {
       [SHOW_ALERT]: (state, {payload}) => ({
-        ...payload, visible: true
+        ...state,
+        ...payload,
+        visible: true,
       }),
       [HIDE_ALERT]: (state) => ({
-        ...state, visible: false
+        ...state,
+        visible: false
       }),
       DEFAULT: state => state,
     };
@@ -117,6 +119,8 @@ src/App.js
 
 3. **Извлекаем контекст**:
 
+Именно этот инструмент предоставляет различным компонентам доступ указанному стейту
+
 *src/context/alert/alertContext.js*
 
     import {createContext} from 'react';
@@ -125,22 +129,35 @@ src/App.js
 
 4. **Соединяем стейт и редьюсер**:
 
-Создаем компонент, который содержит стейт и будет оборачивать все приложение в контекст провайдера. Для этого в useReducer передаем только что созданный редьюсер, создаем необходимые функции взаимодействия, передаем их одним объектом в пропсы.
+Создаем компонент, который содержит 
+- стейт 
+- метод dispatch, который воздействует на стейт
+- набор функции, которые оборачивают dispatch и производят необходимые действия
+
+Данный компонент будет оборачивать все приложение. А в пропсы провайдера передаем и сам стейт и функции взаимодействия.
 
 *src/context/alert/AlertState.js*
 
     import React, {useReducer} from 'react';
-    import {HIDE_ALERT, SHOW_ALERT} from '../alertActions';
+    import {HIDE_ALERT, SHOW_ALERT} from './alertConstants';
     import {AlertContext} from './alertContext';
     import {alertReducer} from './alertReducer';
 
-    export const AlertState = ({children}) => {
-      const [state, dispatch] = useReducer(alertReducer, {visible: false});
+    const initialState = {
+      visible: false,
+      text: ``,
+      warning: ``,
+    };
 
-      const show = (text, type = 'warning') => dispatch({
+    export const AlertState = ({children}) => {
+      const [state, dispatch] = useReducer(alertReducer, initialState);
+
+      const show = (text, warning) => {
+        dispatch({
           type: SHOW_ALERT,
-          payload: {text, type},
+          payload: {text, warning},
         });
+      };
 
       const hide = () => dispatch({
         type: HIDE_ALERT,
@@ -163,9 +180,9 @@ src/App.js
     import {BrowserRouter, Switch, Route, Redirect} from "react-router-dom";
     import {HOME_ROUTE} from './routes/constants';
     import {publicRoutes} from './routes/routes';
+    import {AlertState} from './context/alert/AlertState';
     import Navbar from './components/Navbar';
     import Alert from './components/Alert';
-    import {AlertState} from './context/alert/AlertState';
 
     function App() {
       return (
@@ -188,7 +205,9 @@ src/App.js
 
 6. **Использование контекста в компонентах**. 
 
-Все, что нужно теперь для извлечения стейта, это использовать const {alert, hide, show} = useContext(AlertContext):
+Все, что нужно теперь для извлечения стейта, это использовать const {alert, hide, show} = useContext(AlertContext)
+
+*src/components/Alert.jsx*
 
     import React, {useContext} from 'react';
     import {AlertContext} from '../context/alert/alertContext';
@@ -202,52 +221,29 @@ src/App.js
       }
 
       return (
-        <span>{alert.text}</span>
-        <button type="button" className="close" onClick={hide} aria-label="Close">
-          <span aria-hidden="true">&times;</span>
-        </button>
+        <div className={`alert-${alert.warning}`}>
+          <strong>{alert.warning}</strong>
+          <span>{alert.text}</span>
+          <button type="button" className="close" onClick={hide}>
+            <span>&times;</span>
+          </button>
+        </div>
       );
     };
 
     export default Alert;
 
-А так же:
-
-    import React, {useContext, useState} from 'react';
-    import {AlertContext} from '../context/alert/alertContext';
-
-    const Form = () => {
-
-      const [value, setValue] = useState('');
-      const alert = useContext(AlertContext);
-
-      const handleSubmit = (evt) => {
-        evt.preventDefault();
-
-        alert.show(value, `success`);
-      };
-
-      return (
-        <form onSubmit={handleSubmit}>
-          <input
-            type="text"
-            className="form-control"
-            placeholder="Введите название заметки"
-            value={value}
-            onChange={({target}) => setValue(target.value)} />
-        </form>
-      );
-    };
-
-    export default Form;
-
 # Firebase
+
+Нам нужно, чтобы при каких-либо изменениях в компонентах, эти действия также отражались на некоем внутреннем хранилище, которое, в свою очередь, будет консистентно по отношению к firebase и на основании которого будут отрисовываться компоненты. Т.е. будет динамически меняться массив записок. Посредством useContext сделаем его доступным для воздействия из любых компонентов.
 
 Часть процесса повторяет создававшийся выше useContext. 
 
 1. **Создаем экшены**:
 
-src/context/firebaseActions.js
+Перечисляем действия, которые будут воздействовать на стейт.
+
+src/context/firebaseConstants.js
 
     export const SHOW_LOADER = 'SHOW_LOADER';
     export const ADD_NOTE = 'ADD_NOTE';
@@ -256,18 +252,18 @@ src/context/firebaseActions.js
 
 2. **Создаем редьюсер**:
 
-Позволит взаимодействовать с стейтом Firebase, отправляя actions:
+Отправляя действия в редьюсер, мы можем воздействовать на стейт определенным образом. Существует несколько паттернов создания редьюсера. В данном случае воспользуемся литералами объекта:
 
-*src/context/firebase/firebaseReducer.js*
+    *src/context/firebase/firebaseReducer.js*
 
-    import {ADD_NOTE, FETCH_NOTES, REMOVE_NOTE, SHOW_LOADER} from "../firebaseActions";
+    import {ADD_NOTE, FETCH_NOTES, REMOVE_NOTE, SHOW_LOADER} from "./firebaseConstants";
 
     const handlers = {
       [SHOW_LOADER]: (state) => ({
         ...state, loading: true
       }),
       [ADD_NOTE]: (state, {payload}) => ({
-        ...state, notes: [...state, payload]
+        ...state, notes: [...state.notes, payload]
       }),
       [FETCH_NOTES]: (state, {payload}) => ({
         ...state, notes: payload, loading: false
@@ -283,7 +279,6 @@ src/context/firebaseActions.js
       return handle(state, action);
     };
 
-
 3. **Извлекаем контекст**:
 
 Это обычная переменная, которую используем как реакт-компонент
@@ -294,23 +289,28 @@ src/context/firebaseActions.js
 
     export const FirebaseContext = createContext();
 
-4. Создаем проект на сайте firebase
+4. **Создаем проект на сайте firebase**
 
 На официальном сайте создаем проект, производим первоначальные настройки (даем наименование), далее переходим в раздел Realtime Database, указываем, что операции будем проводить в тестовом режиме, в закладке "Данные" копируем ссылку на проект. 
 
 5. **Соединяем стейт, редьюсер и Axios запросы**:
 
-Это будет ***компонент***, который содержит стейт и будет оборачивать все приложение в контекст провайдера. Для этого в useReducer передаем только что созданный редьюсер, создаем необходимые функции взаимодействия, сохраненную ссылку на проект firebase сохраняем в файл .env.local REACT_APP_DB_URL (более подробно [здесь](#Паттерны-и-лайфхаки))
+Создаем компонент, который содержит 
+- стейт 
+- метод dispatch, который воздействует на стейт
+- набор функции, которые оборачивают dispatch и производят необходимые действия
+
+Данный компонент будет оборачивать все приложение. А в пропсы провайдера передаем и сам стейт и функции взаимодействия.
 
 *src/context/firebase/FirebaseState.js*
 
     import React, {useReducer} from 'react';
     import axios from 'axios';
-    import {REMOVE_NOTE, SHOW_LOADER} from '../firebaseActions';
+    import {ADD_NOTE, FETCH_NOTES, REMOVE_NOTE, SHOW_LOADER} from './firebaseConstants';
     import {FirebaseContext} from './firebaseContext';
     import {firebaseReducer} from './firebaseReducer';
 
-    const url=process.env.REACT_APP_DB_URL;
+    const url = process.env.REACT_APP_DB_URL;
 
     const initialState = {
       notes: [],
@@ -318,33 +318,47 @@ src/context/firebaseActions.js
     };
 
     export const FirebaseState = ({children}) => {
+
       const [state, dispatch] = useReducer(firebaseReducer, initialState);
 
-      const showLoader = () => dispatch({type: SHOW_LOADER});
-
       const fetchNotes = async () => {
-        showLoader();
-        const res = await axios.get(`url/notes.json`);
+        dispatch({type: SHOW_LOADER});
 
-        console.log(`fetch: `, res.data);
+        const res = await axios.get(`${url}/notes.json`);
+
+        const payload = Object.keys(res.data || {}).map(key => {
+          return {
+            ...res.data[key],
+            id: key,
+          };
+        });
+
+        dispatch({type: FETCH_NOTES, payload});
       };
 
       const addNote = async (title) => {
         const note = {
-          title, 
-          date: new Date().toJSON,
+          title,
+          date: new Date().toJSON(),
         };
 
         try {
           const res = await axios.post(`${url}/notes.json`, note);
-          console.log(`addNote: `, res.data);
+
+          const payload = {
+            ...note,
+            id: res.data.name
+          };
+
+          dispatch({type: ADD_NOTE, payload});
+
         } catch (error) {
           throw new Error(error.message);
         }
       };
 
       const removeNote = async (id) => {
-        await axios.delete(`url/notes/i}.json`);
+        await axios.delete(`${url}/notes/${id}.json`);
 
         dispatch({
           type: REMOVE_NOTE,
@@ -354,7 +368,6 @@ src/context/firebaseActions.js
 
       return (
         <FirebaseContext.Provider value={{
-          showLoader,
           fetchNotes,
           addNote,
           removeNote,
@@ -378,22 +391,16 @@ src/context/firebaseActions.js
     import {publicRoutes} from './routes/routes';
     import {AlertState} from './context/alert/AlertState';
     import {FirebaseState} from './context/firebase/FirebaseState';
-    import Navbar from './components/Navbar';
-    import Alert from './components/Alert';
 
     function App() {
       return (
         <FirebaseState>
           <AlertState>
             <BrowserRouter>
-              <Navbar />
-              <div className="container pt-4">
-                <Alert />
-                <Switch>
-                  {publicRoutes.map(({title, path, Component}) => <Route key={title} path={path} component={Component} exact />)}
-                  <Redirect to={HOME_ROUTE} />
-                </Switch>
-              </div>
+              <Switch>
+                {publicRoutes.map(({title, path, Component}) => <Route key={title} path={path} component={Component} exact />)}
+                <Redirect to={HOME_ROUTE} />
+              </Switch>
             </BrowserRouter>
           </AlertState>
         </FirebaseState>
@@ -402,39 +409,14 @@ src/context/firebaseActions.js
 
     export default App;
 
+
 7. **Использование контекста в компонентах**:
 
 Все, что нужно теперь для извлечения стейта, это использовать const {showLoader, fetchNotes, addNote, removeNote, loading, notes} = useContext(FirebaseContext) в нужных файлах.
 
 Для отрисовки данных с сервера:
 
-src/pages/home/Home.jsx
-
-    import React, {Fragment, useContext, useEffect} from 'react';
-    import {FirebaseContext} from '../../context/firebase/firebaseContext';
-    import Form from '../../components/Form';
-    import Loader from '../../components/Loader';
-    import Notes from '../../components/Notes';
-
-    const Home = () => {
-      const {loading, notes, fetchNotes} = useContext(FirebaseContext);
-
-      useEffect(() => {
-        fetchNotes();
-      }, []);
-
-      return (
-        <Fragment>
-          {loading ? <Loader /> : <Notes notes={notes} />}
-        </Fragment>
-      );
-    };
-
-    export default Home;
-
-Для добавления данных на сервер извлекаем из контекста сам firebase и используем ранее созданный для него метод addNote()
-
-src/components/form/Form.jsx
+*src/pages/home/Home.jsx*
 
     import React, {useContext, useState} from 'react';
     import {AlertContext} from '../context/alert/alertContext';
@@ -449,18 +431,13 @@ src/components/form/Form.jsx
       const handleSubmit = (evt) => {
         evt.preventDefault();
 
-        if (value) {
-
-          firebase.addNote(value).then(() => {
-            alert.show(`Заметка была создана`, `success`);
-          }).catch(error => {
-            alert.show(`Заметка не была создана`, error);
-          });
-
-          setValue(``);
-
+        if (value.trim()) {
+          firebase.addNote(value.trim())
+            .then(() => alert.show(`The note has been created`, `success`))
+            .then(() => setValue(``))
+            .catch((error) => alert.show(`Error: ${error}`, `danger`));
         } else {
-          alert.show(`Введите название заметки`);
+          alert.show(`Enter a title for the note`, `warning`);
         }
       };
 
@@ -470,16 +447,15 @@ src/components/form/Form.jsx
             <input
               type="text"
               className="form-control"
-              placeholder="Введите название заметки"
+              placeholder="Enter a title for the note"
               value={value}
-              onChange={({target}) => setValue(target.value.trim())} />
+              onChange={({target}) => setValue(target.value)} />
           </div>
         </form>
       );
     };
 
     export default Form;
-
 
 # Базовые настройки
 

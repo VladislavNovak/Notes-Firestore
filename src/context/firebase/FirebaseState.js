@@ -1,7 +1,7 @@
 /* eslint-disable react/prop-types */
 import React, {useReducer} from 'react';
 import axios from 'axios';
-import {ADD_NOTE, FETCH_NOTES, REMOVE_NOTE, SHOW_LOADER} from '../firebaseActions';
+import {ADD_NOTE, FETCH_NOTES, REMOVE_NOTE, SHOW_LOADER} from './firebaseConstants';
 import {FirebaseContext} from './firebaseContext';
 import {firebaseReducer} from './firebaseReducer';
 

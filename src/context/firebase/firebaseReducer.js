@@ -1,4 +1,4 @@
-import {ADD_NOTE, FETCH_NOTES, REMOVE_NOTE, SHOW_LOADER} from "../firebaseActions";
+import {ADD_NOTE, FETCH_NOTES, REMOVE_NOTE, SHOW_LOADER} from "./firebaseConstants";
 
 const handlers = {
   [SHOW_LOADER]: (state) => ({
