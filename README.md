@@ -10,6 +10,7 @@
 - [Маршрутизация](#Маршрутизация)
 - [useContext](#useContext)
 - [Firebase](#Firebase)
+- [Deploy](#Deploy)
 - [Базовые настройки](#Базовые-настройки)
 - [Паттерны и лайфхаки](#Паттерны-и-лайфхаки)
 
@@ -501,13 +502,36 @@ src/context/firebaseConstants.js
 
     npm install -g firebase-tools
 
-На следующем шаге потребуется ввести
-
-    firebase login
-
-Или, если уже залогинились:
+На следующем шаге потребуется ввести firebase login, если неверный логин - firebase logout или, если потребуется интерактивный режим:
 
     firebase login --interactive
+
+В ответ вводим n или no, выбираем аккаунт, подтверждаем выбор и вводим:
+
+    firebase init
+
+Далее - следуем по шагам:
+
+1. Are you ready to proceed → Y (т.к. ранее сделали уже build версию) 
+2. Hosting: Configure files for Firebase Hosting and (optionally) set up GitHub Action deploys
+3. Use an existing project → выбираем проект
+4. What do you want to use as your public directory? → build
+5. Configure as a single-page app? → Y
+6. Set up automatic builds and deploys with GitHub? → Y
+7. File build/index.html already exists. Overwrite? → n
+8. For which GitHub repository would you like to set up a GitHub workflow? → вводим необходимые user/repository. На этом этапе мы получим в текстовой строке необходимые пароли доступа. Сохраним их отдельно.
+9. Set up the workflow to run a build script before every deploy? → y
+10. What script should be run before every deploy? → npm ci && npm run build
+11. Set up automatic deployment to your site's live channel when a PR is merged? → y
+12. What is the name of the GitHub branch associated with your site's live channel? → master
+
+Снова переходим на сайт firebase, кликаем next и далее
+
+    firebase deploy
+
+Ниже появится ссылка Project Console, откуда можно управлять сайтом и настроить домен. Сайт данном случае расположен по адресу:
+
+https://react-notes-7cda9.web.app
 
 # Базовые настройки
 
