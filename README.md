@@ -361,7 +361,6 @@ src/context/firebaseConstants.js
       dispatch({type: FETCH_NOTES, payload});
     };
 
-
 5. **Создаем компонент хранилища**:
 
 Создаем компонент, который содержит 
@@ -489,6 +488,26 @@ src/context/firebaseConstants.js
     };
 
     export default Form;
+
+# Deploy
+
+Пришло время для развертывания приложения на сервер. Вначале соберем продакшн версию проекта
+
+    yarn run build
+
+В ответ на данное действие появится папка build с минифицированным кодом.
+
+Переходим на сайт firebase → Hosting → Get Started, где указано, что необходимо глобально установить:
+
+    npm install -g firebase-tools
+
+На следующем шаге потребуется ввести
+
+    firebase login
+
+Или, если уже залогинились:
+
+    firebase login --interactive
 
 # Базовые настройки
 
