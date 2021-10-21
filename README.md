@@ -1,6 +1,17 @@
-Проект в стадии разработки. 
+Использует **React**, **Axios**, **Firebase**. Содержит **Sass**. 
+
 Реализует функционал записной книжки. 
-Использует React, Axios, Firebase. Содержит Sass. 
+Завершенный проект. 
+
+-----
+
+![Screenshot](Screenshot_9.png)
+
+- [Маршрутизация](#Маршрутизация)
+- [useContext](#useContext)
+- [Firebase](#Firebase)
+- [Базовые настройки](#Базовые-настройки)
+- [Паттерны и лайфхаки](#Паттерны-и-лайфхаки)
 
 # Маршрутизация
 
@@ -293,7 +304,65 @@ src/context/firebaseConstants.js
 
 На официальном сайте создаем проект, производим первоначальные настройки (даем наименование), далее переходим в раздел Realtime Database, указываем, что операции будем проводить в тестовом режиме, в закладке "Данные" копируем ссылку на проект. 
 
-5. **Соединяем стейт, редьюсер и Axios запросы**:
+5. Axios
+
+Теперь разберем, какие операции запросов на сервер нам нужны. Учтем, что все запросы асинхронные, а значит действуют в рамках логики async - await. На предыдущем этапе мы уже скопировали ссылку на проект в firebase - она и станет нашим путем при запросе к серверу. Создаем [переменную окружения](#-Паттерны-и-лайфхаки), а после - извлекаем ее в переменную url.
+
+Все асинхронные запросы состоят из двух процессов: сохранении в firebase и, в случае успешного завершения операции, сохранении данных в стейт нашего объекта Firebase посредством dispatch. При таком подходе, данные на удаленном сервере и в хранилище будут консистентными.
+
+Сохраняем запись:
+
+    const addNote = async (title) => {
+      const note = {
+        title,
+        date: new Date().toJSON(),
+      };
+
+      try {
+        const res = await axios.post(`${url}/notes.json`, note);
+
+        const payload = {
+          ...note,
+          id: res.data.name
+        };
+
+        dispatch({type: ADD_NOTE, payload});
+
+      } catch (error) {
+        throw new Error(error.message);
+      }
+    };
+
+Аналогично мы можем удалить запись:
+
+    const removeNote = async (id) => {
+      await axios.delete(`${url}/notes/${id}.json`);
+
+      dispatch({
+        type: REMOVE_NOTE,
+        payload: id,
+      });
+    };
+
+Аналогично мы можем извлечь сохраненные записи:
+
+    const fetchNotes = async () => {
+      dispatch({type: SHOW_LOADER});
+
+      const res = await axios.get(`${url}/notes.json`);
+
+      const payload = Object.keys(res.data || {}).map(key => {
+        return {
+          ...res.data[key],
+          id: key,
+        };
+      });
+
+      dispatch({type: FETCH_NOTES, payload});
+    };
+
+
+5. **Создаем компонент хранилища**:
 
 Создаем компонент, который содержит 
 - стейт 
@@ -301,6 +370,8 @@ src/context/firebaseConstants.js
 - набор функции, которые оборачивают dispatch и производят необходимые действия
 
 Данный компонент будет оборачивать все приложение. А в пропсы провайдера передаем и сам стейт и функции взаимодействия.
+
+Асинхронные функции помещаем в соответствующие строки с троеточием.
 
 *src/context/firebase/FirebaseState.js*
 
@@ -321,50 +392,11 @@ src/context/firebaseConstants.js
 
       const [state, dispatch] = useReducer(firebaseReducer, initialState);
 
-      const fetchNotes = async () => {
-        dispatch({type: SHOW_LOADER});
+      const fetchNotes = async () => {...};
 
-        const res = await axios.get(`${url}/notes.json`);
+      const addNote = async (title) => {...};
 
-        const payload = Object.keys(res.data || {}).map(key => {
-          return {
-            ...res.data[key],
-            id: key,
-          };
-        });
-
-        dispatch({type: FETCH_NOTES, payload});
-      };
-
-      const addNote = async (title) => {
-        const note = {
-          title,
-          date: new Date().toJSON(),
-        };
-
-        try {
-          const res = await axios.post(`${url}/notes.json`, note);
-
-          const payload = {
-            ...note,
-            id: res.data.name
-          };
-
-          dispatch({type: ADD_NOTE, payload});
-
-        } catch (error) {
-          throw new Error(error.message);
-        }
-      };
-
-      const removeNote = async (id) => {
-        await axios.delete(`${url}/notes/${id}.json`);
-
-        dispatch({
-          type: REMOVE_NOTE,
-          payload: id,
-        });
-      };
+      const removeNote = async (id) => {...};
 
       return (
         <FirebaseContext.Provider value={{
@@ -409,8 +441,9 @@ src/context/firebaseConstants.js
 
     export default App;
 
+7. **Взаимодействие компонентов с удаленным сервером**:
 
-7. **Использование контекста в компонентах**:
+Хранилище настроено, удаленный сервер получает запросы. Осталось только сделать так, чтобы в ответ на наши действия, все необходимые данные менялись и в соответствии с этим менялся внешний вид компонентов.
 
 Все, что нужно теперь для извлечения стейта, это использовать const {showLoader, fetchNotes, addNote, removeNote, loading, notes} = useContext(FirebaseContext) в нужных файлах.
 

@@ -11,9 +11,9 @@ const About = () => {
   }, []);
 
   return (
-    <div className="jumbotron">
+    <div className="jumbotron jumbotron-reboot">
       <div className="container">
-        <h1 className="display-6">Лучшее React приложение</h1>
+        <h1 className="display-6">Based on React, Axios and Firebase</h1>
         <p className="lead">Версия 0.1</p>
       </div>
     </div>
