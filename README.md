@@ -1,4 +1,4 @@
-Использует **React**, **Axios**, **Firebase**. Содержит **Sass**. 
+Использует **React**, **Axios**, **Firebase**. Стилизация **Sass**. 
 
 Реализует функционал записной книжки. 
 Завершенный проект. 
@@ -13,10 +13,15 @@
 - [Deploy](#Deploy)
 - [Базовые настройки](#Базовые-настройки)
 - [Паттерны и лайфхаки](#Паттерны-и-лайфхаки)
+  - [Возможности файла env local](#Возможности-файла-env-local)
+  - [Массив с фейковыми данными](#Массив-с-фейковыми-данными)
 
 # Маршрутизация
 
-1. **Создаем компоненты, которые представляют страницы (Note, About)**
+1. **Создаем страницы**
+
+В проекте будет две страницы, поэтому создаем компоненты, которые будут их представлять: src/pages/ (Note, About)
+
 2. **Перечисляем в константах пути к ним:**
 
 src/routes/constants.js
@@ -44,7 +49,7 @@ src/routes/routes.js
 
 src/components/Navbar.jsx
 
-    import React, {Fragment} from 'react';
+    import React from 'react';
     import {NavLink} from 'react-router-dom';
     import {publicRoutes} from '../routes/routes';
 
@@ -247,9 +252,11 @@ src/App.js
 
 # Firebase
 
+Важно: база данных будет основана на **Realtime Database**!
+
 Нам нужно, чтобы при каких-либо изменениях в компонентах, эти действия также отражались на некоем внутреннем хранилище, которое, в свою очередь, будет консистентно по отношению к firebase и на основании которого будут отрисовываться компоненты. Т.е. будет динамически меняться массив записок. Посредством useContext сделаем его доступным для воздействия из любых компонентов.
 
-Часть процесса повторяет создававшийся выше useContext. 
+Большая часть процесса аналогична созданному выше AlertContext. 
 
 1. **Создаем экшены**:
 
@@ -309,7 +316,7 @@ src/context/firebaseConstants.js
 
 Теперь разберем, какие операции запросов на сервер нам нужны. Учтем, что все запросы асинхронные, а значит действуют в рамках логики async - await. На предыдущем этапе мы уже скопировали ссылку на проект в firebase - она и станет нашим путем при запросе к серверу. Создаем [переменную окружения](#-Паттерны-и-лайфхаки), а после - извлекаем ее в переменную url.
 
-Все асинхронные запросы состоят из двух процессов: сохранении в firebase и, в случае успешного завершения операции, сохранении данных в стейт нашего объекта Firebase посредством dispatch. При таком подходе, данные на удаленном сервере и в хранилище будут консистентными.
+Все асинхронные запросы состоят из двух процессов: сохранении в firebase и, в случае успешного завершения операции, сохранении данных в стейт нашего объекта Firebase посредством dispatch. При таком подходе, данные на удаленном сервере и в хранилище будут консистентными. Выглядеть это может так:
 
 Сохраняем запись:
 
@@ -539,17 +546,26 @@ https://react-notes-7cda9.web.app
 
     npm i -g yarn
 
-Создаем проект:
+Чтобы создать проект на основе create-react-app проверяем актуальную версию node:
+
+    node -v
+
+Если она выше 5.2 вводим, где notes-firestore - наименование нового проекта:
 
     npx create-react-app notes-firestore
 
-Переходим в сам проект через cd notes-firestore и устанавливаем зависимости:
+Переходим в сам проект через cd notes-firestore и устанавливаем зависимости (выбираем необходимые):
 
-    yarn add node-sass react-router-dom axios bootstrap
+    yarn add node-sass typescript react-router-dom axios bootstrap firebase react-firebase-hooks
+
+Часто при установке sass возникает ошибка версий. В этом случае:
+
+    yarn remove node-sass 
+    yarn add node-sass@4.14.1
 
 Настраиваем линтер (сам eslint уже установлен вместе с create-react-app):
 
-    yarn add eslint-plugin-babel eslint-plugin-react --dev
+    yarn add eslint-plugin-babel eslint-plugin-react eslint-config-htmlacademy --dev
 
 Создаем обслуживающие функционал:
 
@@ -647,14 +663,29 @@ https://react-notes-7cda9.web.app
     .gitattributes export-ignore
     .gitignore export-ignore
 
+Проверяем .gitignore. Этот файл уже должен быть по умолчанию:
+
+    /node_modules
+    /.pnp
+    .pnp.js
+
+    /coverage
+
+    /build
+
+    .DS_Store
+    .env.local
+    .env.development.local
+    .env.test.local
+    .env.production.local
+
+    npm-debug.log*
+    yarn-debug.log*
+    yarn-error.log*
+
 Для того, чтобы использовать препроцессор, меняем расширение index.css и перемещаем в папку src/assets/sass/index.scss. А для того, чтобы подключить туда же bootstrap, помещаем вверх этого файла:
 
     @import "~bootstrap/scss/bootstrap";
-
-Часто при установке sass возникает ошибка версий. В этом случае:
-
-    yarn remove node-sass 
-    yarn add node-sass@4.14.1
 
 Удаляем из предустановленного проекта App.css App.test.js logo.svg reportWebVitalis.js. Удаляем сопутствующие импорты.
 
@@ -684,6 +715,8 @@ https://react-notes-7cda9.web.app
 
 # Паттерны и лайфхаки
 
+## Возможности файла env local
+
 Переменные окружения, такие, например, как путь до проекта на сервере firebase можно сохранить в файле .env.local. Сам файл должен быть указан в gitignore т.к. в нем можно содержать в том числе и пароли. Данный подход можно использовать только для этапа разработки:
 
     REACT_APP_DB_URL=https://firebasedatabase.app
@@ -694,7 +727,7 @@ https://react-notes-7cda9.web.app
 
     console.log(proc);
 
-Сгенерировать массив с фейковыми данными:
+## Массив с фейковыми данными:
 
     const notes = new Array(3)
     .fill(``)
